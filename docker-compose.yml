@@ -5,7 +5,8 @@ services:
     build:
       context: .
     container_name: rss_processor
-    command: poetry run python main.py
+    # CRITICAL FIX: Запускаем main.py как модуль внутри пакета
+    command: poetry run python -m rss_parser.main 
     restart: always
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
@@ -19,7 +20,8 @@ services:
     build:
       context: .
     container_name: rss_api
-    command: poetry run uvicorn api:app --host 0.0.0.0 --port 8001
+    # CRITICAL FIX: Запускаем api.py как модуль внутри пакета
+    command: poetry run uvicorn rss_parser.api:app --host 0.0.0.0 --port 8001
     restart: always
     ports:
       - "8001:8001"
@@ -45,12 +47,14 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - processor
     restart: always
-
+    
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -59,6 +63,8 @@ services:
     restart: always
     volumes:
       - grafana-storage:/var/lib/grafana
+    depends_on:
+      - prometheus # Добавлено, чтобы Графана зависела от Прометеуса
 
 volumes:
   grafana-storage:

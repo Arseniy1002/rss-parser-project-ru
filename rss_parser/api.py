@@ -1,10 +1,11 @@
-# api.py
+# rss_parser/api.py
 from fastapi import FastAPI, HTTPException
 from typing import List, Optional
 import aiosqlite
 import logging
 
-from config import settings
+# ИМПОРТ ИСПРАВЛЕН: относительный импорт
+from .config import settings
 
 app = FastAPI(title="RSS Parser API")
 logging.basicConfig(level=logging.INFO)
@@ -43,8 +44,8 @@ async def get_posts():
 
 @app.get("/posts/search", response_model=List[dict])
 async def search_posts(keyword: str):
-    """Найти посты по ключевому слову."""
+    """Поиск постов по ключевому слову."""
+    if not keyword:
+        raise HTTPException(status_code=400, detail="Необходимо указать ключевое слово.")
     posts = await db_api.get_posts_by_keyword(keyword)
-    if not posts:
-        raise HTTPException(status_code=404, detail=f"Постов с ключевым словом '{keyword}' не найдено.")
     return posts

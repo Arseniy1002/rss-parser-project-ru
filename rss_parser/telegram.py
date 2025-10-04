@@ -1,9 +1,9 @@
-# telegram.py
 import httpx
 import logging
 from tenacity import retry, wait_fixed, stop_after_attempt, before_log
 
-from config import settings
+# CRITICAL FIX: Относительный импорт
+from .config import settings
 
 class TelegramClient:
     def __init__(self):

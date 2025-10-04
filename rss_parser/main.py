@@ -1,4 +1,4 @@
-# main.py
+# rss_parser/main.py
 import asyncio
 import httpx
 import logging
@@ -9,11 +9,13 @@ import os
 
 from tenacity import retry, wait_fixed, stop_after_attempt, before_log
 from prometheus_client import start_http_server, Summary, Counter
+import aiosqlite # Вернул импорт для проверки БД в конце
 
-from config import settings
-from database import AsyncDatabaseManager
-from parser import parse_rss_feed_from_text, analyze_text_for_keywords_advanced, setup_nltk
-from telegram import TelegramClient
+# ИМПОРТЫ ИСПРАВЛЕНЫ: используются относительные импорты (.)
+from .config import settings
+from .database import AsyncDatabaseManager
+from .parser import parse_rss_feed_from_text, analyze_text_for_keywords_advanced, setup_nltk
+from .telegram import TelegramClient
 
 # --- Настройка Prometheus-метрик ---
 REQUEST_TIME = Summary('request_processing_seconds', 'Время обработки RSS-ленты')

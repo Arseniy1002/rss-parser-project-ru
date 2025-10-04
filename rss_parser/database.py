@@ -1,10 +1,10 @@
-# database.py
 import aiosqlite
 import hashlib
 import logging
 from typing import Dict
 
-from config import settings
+# CRITICAL FIX: Относительный импорт
+from .config import settings
 
 class AsyncDatabaseManager:
     def __init__(self):
@@ -55,7 +55,4 @@ class AsyncDatabaseManager:
             return False
         except aiosqlite.IntegrityError:
             logging.debug(f"Пост уже существует (хеш): {post_data['link']}")
-            return False
-        except Exception as e:
-            logging.error(f"Ошибка при вставке поста: {e}")
             return False
