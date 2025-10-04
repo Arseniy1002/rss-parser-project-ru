@@ -44,9 +44,14 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
     # 2. Инициализация инструментов и объединение стоп-слов
     lemmatizer = WordNetLemmatizer()
     
+    # CRITICAL FIX: Вручную добавляем проблемные русские стоп-слова, которые не фильтруются NLTK в CI.
+    manual_russian_stopwords = {
+        'эта', 'как', 'для', 'том', 'что', 'это', 'при', 'все'
+    }
+
     try:
-        # Объединяем стоп-слова для обоих языков (английский и русский)
-        all_stopwords = set(stopwords.words('english')) | set(stopwords.words('russian'))
+        # Объединяем стоп-слова для обоих языков (английский и русский) и ручной список
+        all_stopwords = set(stopwords.words('english')) | set(stopwords.words('russian')) | manual_russian_stopwords
     except LookupError:
         logging.error("NLTK stopwords не загружены.")
         return []
