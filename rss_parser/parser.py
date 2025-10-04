@@ -45,7 +45,6 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
     lemmatizer = WordNetLemmatizer()
     
     # CRITICAL FIX: Вручную добавляем проблемные русские стоп-слова, которые не фильтруются NLTK в CI.
-    # Убрано 'веб', так как это значимое слово
     manual_russian_stopwords = {
         'эта', 'как', 'для', 'том', 'что', 'это', 'при', 'все'
     }
