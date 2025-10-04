@@ -10,6 +10,7 @@ import logging
 def setup_nltk():
     """Загрузка ресурсов NLTK"""
     try:
+        # Проверяем наличие ресурсов
         nltk.data.find('corpora/wordnet')
         nltk.data.find('corpora/stopwords')
         nltk.data.find('corpora/omw-1.4')
@@ -35,39 +36,38 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
     if not text:
         return []
     
-    # 1. Очистка и токенизация
-    # CRITICAL FIX: Используем re.findall для более надежной токенизации. 
-    # Ищем последовательности из 3 или более букв, что автоматически исключает 
-    # короткие слова и небуквенные символы.
+    # 1. Токенизация и очистка: 
+    # Используем re.findall для извлечения только слов (последовательностей букв) 
+    # длиной 3 и более, что автоматически фильтрует мусор, знаки препинания и короткие стоп-слова.
     words = re.findall(r'[a-zA-Zа-яА-Я]{3,}', text.lower())
     
     # 2. Инициализация инструментов и объединение стоп-слов
     lemmatizer = WordNetLemmatizer()
     
-    # Объединяем стоп-слова для обоих языков, чтобы отфильтровать их все
     try:
+        # Объединяем стоп-слова для обоих языков (английский и русский)
         all_stopwords = set(stopwords.words('english')) | set(stopwords.words('russian'))
     except LookupError:
-        # Если ресурсы NLTK не были загружены
+        logging.error("NLTK stopwords не загружены.")
         return []
 
     processed_words = []
     
     for word in words:
-        # Проверяем на стоп-слова
-        if word not in all_stopwords:
-            # WordNetLemmatizer работает только с английским. 
+        # Проверка на стоп-слова
+        if word in all_stopwords:
+            continue
             
-            # Проверяем, содержит ли слово кириллицу
-            is_russian = any('\u0400' <= char <= '\u04FF' for char in word)
+        # Определяем, является ли слово русским (содержит ли кириллицу)
+        is_russian = any('\u0400' <= char <= '\u04FF' for char in word)
             
-            if not is_russian:
-                # Предполагаем английское слово и лемматизируем
-                lemma = lemmatizer.lemmatize(word)
-                processed_words.append(lemma)
-            else:
-                # Русское слово, оставляем его как есть
-                processed_words.append(word)
+        if not is_russian:
+            # Английское слово: применяем лемматизацию
+            lemma = lemmatizer.lemmatize(word)
+            processed_words.append(lemma)
+        else:
+            # Русское слово: добавляем как есть (WordNetLemmatizer не поддерживает русский)
+            processed_words.append(word)
 
     # 3. Подсчет частоты
     word_counts = Counter(processed_words)
