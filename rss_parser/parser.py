@@ -36,8 +36,10 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
         return []
     
     # 1. Очистка и токенизация
-    cleaned_text = re.sub(r'[^a-zA-Zа-яА-Я\s]', ' ', text.lower())
-    words = cleaned_text.split()
+    # CRITICAL FIX: Используем re.findall для более надежной токенизации. 
+    # Ищем последовательности из 3 или более букв, что автоматически исключает 
+    # короткие слова и небуквенные символы.
+    words = re.findall(r'[a-zA-Zа-яА-Я]{3,}', text.lower())
     
     # 2. Инициализация инструментов и объединение стоп-слов
     lemmatizer = WordNetLemmatizer()
@@ -46,16 +48,15 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
     try:
         all_stopwords = set(stopwords.words('english')) | set(stopwords.words('russian'))
     except LookupError:
-        # Если ресурсы NLTK не были загружены перед тестами (хотя setup_nltk должна была сработать)
+        # Если ресурсы NLTK не были загружены
         return []
 
     processed_words = []
     
     for word in words:
-        if word not in all_stopwords and len(word) > 2:
+        # Проверяем на стоп-слова
+        if word not in all_stopwords:
             # WordNetLemmatizer работает только с английским. 
-            # Для английских слов применяем лемматизацию, для русских оставляем как есть.
-            # (Простая эвристика: если слово не содержит кириллицы, пытаемся лемматизировать как английское)
             
             # Проверяем, содержит ли слово кириллицу
             is_russian = any('\u0400' <= char <= '\u04FF' for char in word)
@@ -65,8 +66,7 @@ def analyze_text_for_keywords_advanced(text: str, num_keywords: int = 5) -> List
                 lemma = lemmatizer.lemmatize(word)
                 processed_words.append(lemma)
             else:
-                # Русское слово, оставляем его как есть (для русского нужна другая лемматизация, 
-                # но для простоты задачи оставим его нетронутым)
+                # Русское слово, оставляем его как есть
                 processed_words.append(word)
 
     # 3. Подсчет частоты
