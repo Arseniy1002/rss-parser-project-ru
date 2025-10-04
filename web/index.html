@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RSS Parser Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 900px; margin: auto; }
+        .post { background-color: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        h1 { color: #333; }
+        h2 { color: #007bff; }
+        a { text-decoration: none; color: #0056b3; }
+        .keywords { font-style: italic; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Последние новости</h1>
+        <div id="posts-list">Загрузка...</div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('http://localhost:8001/posts')
+                .then(response => response.json())
+                .then(posts => {
+                    const postsList = document.getElementById('posts-list');
+                    postsList.innerHTML = '';
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'post';
+                        postElement.innerHTML = `
+                            <h2><a href="${post.link}" target="_blank">${post.title}</a></h2>
+                            <p>${post.summary}</p>
+                            <p class="keywords">Ключевые слова: ${post.keywords}</p>
+                            <small>${new Date(post.published_date).toLocaleString()}</small>
+                        `;
+                        postsList.appendChild(postElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке постов:', error);
+                    document.getElementById('posts-list').innerHTML = 'Не удалось загрузить новости.';
+                });
+        });
+    </script>
+</body>
+</html>

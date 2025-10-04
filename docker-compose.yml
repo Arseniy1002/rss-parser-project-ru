@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  processor:
+    build:
+      context: .
+    container_name: rss_processor
+    command: poetry run python main.py
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+
+  api:
+    build:
+      context: .
+    container_name: rss_api
+    command: poetry run uvicorn api:app --host 0.0.0.0 --port 8001
+    restart: always
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - processor
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile.web
+    container_name: rss_web
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:/usr/share/nginx/html
+    depends_on:
+      - api
+    
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  grafana-storage:

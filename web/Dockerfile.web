@@ -1,0 +1,4 @@
+# web/Dockerfile.web
+FROM nginx:alpine
+
+COPY . /usr/share/nginx/html
